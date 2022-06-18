@@ -11,7 +11,7 @@ weapons = ['CZ75-Auto', 'Desert Eagle', 'Dual Berettas', 'Five-SeveN', 'Glock-18
            'AUG', 'AWP', 'FAMAS', 'G3SG1', 'Galil AR', 'M4A1-S']
 
 
-def find_best_weapon():
+def find_sale_weapon():
     for weapon in weapons:
         print(weapon)
         weapon = weapon.replace(' ', '+')
@@ -33,11 +33,10 @@ def find_best_weapon():
                 continue
             for result_weapon in result_weapons:
                 name_weapon = result_weapon.find('div')['data-hash-name']
-                price_weapon = result_weapon.find('span', class_='sale_price').text.replace('$', '').replace(' USD',
-                                                                                                             '').replace(
-                    ',', '')
-                bitskins_search = requests.get(
-                    f'https://bitskins.com/?appid=730&page=1&market_hash_name={name_weapon}&advanced=1&is_stattrak=0&has_stickers=0&is_souvenir=-1&show_trade_delayed_items=0&sort_by=price&order=asc')
+                price_weapon = result_weapon.find('span', class_='sale_price')\
+                    .text.replace('$', '').replace(' USD','').replace(',', '')
+                print(name_weapon,price_weapon)
+                bitskins_search = requests.get( f'https://bitskins.com/?appid=730&page=1&market_hash_name={name_weapon}&advanced=1&is_stattrak=0&has_stickers=0&is_souvenir=-1&show_trade_delayed_items=0&sort_by=price&order=asc')
                 bitskins_soup = BeautifulSoup(bitskins_search.text, 'lxml')
                 items = bitskins_soup.find('div', class_='col-lg-3 col-md-4 col-sm-5 col-xs-12 item-solo')
                 try:
@@ -48,7 +47,7 @@ def find_best_weapon():
                 m3 = m2.find('h5')
                 bitskins_seller_price = m3.find('span', class_='item-price-display').text.replace('$', '').replace(',',
                                                                                                                    '')
-                if float(price_weapon) / float(bitskins_seller_price) > 1.25 and float(price_weapon) > 0.3:
+                if float(price_weapon) / float(bitskins_seller_price) > 1.1 and float(price_weapon) > 0.3:
                     try:
                         service = Service("chromedriver.exe")
                         service.start()
@@ -62,15 +61,17 @@ def find_best_weapon():
                         real_price = price_block[1].text
                         real_price = float(real_price.replace('$', ''))
                         driver.close()
-                        if real_price / float(bitskins_seller_price) > 1.4 and float(price_weapon) > 0.3:
-                            print(weapon, name_weapon, bitskins_seller_price, real_price)
+                        if real_price / float(bitskins_seller_price) > 1.2 and float(price_weapon) > 0.3:
+                            sale = (real_price - float(bitskins_seller_price)) / float(bitskins_seller_price)
+                            print('Sale ' , weapon, name_weapon, str(sale) + '%')
                     except:
+                        'Error'
                         continue
 
 
 def main():
-    find_best_weapon()
+    find_sale_weapon()
 
 
-if __name__ == 'main':
+if __name__ == '__main__':
     main()
