@@ -32,11 +32,11 @@ def find_sale_weapon():
                 print('No site')
                 continue
             for result_weapon in result_weapons:
-                name_weapon = result_weapon.find('div')['data-hash-name']
+                name_weapon = result_weapon.find('div')['data-hash-name'].replace(' ','+')
                 price_weapon = result_weapon.find('span', class_='sale_price')\
                     .text.replace('$', '').replace(' USD','').replace(',', '')
-                print(name_weapon,price_weapon)
-                bitskins_search = requests.get( f'https://bitskins.com/?appid=730&page=1&market_hash_name={name_weapon}&advanced=1&is_stattrak=0&has_stickers=0&is_souvenir=-1&show_trade_delayed_items=0&sort_by=price&order=asc')
+                bitskins_link = f'https://bitskins.com/?appid=730&page=1&market_hash_name={name_weapon}&advanced=1&is_stattrak=0&has_stickers=0&is_souvenir=-1&show_trade_delayed_items=0&sort_by=price&order=asc'
+                bitskins_search = requests.get(bitskins_link)
                 bitskins_soup = BeautifulSoup(bitskins_search.text, 'lxml')
                 items = bitskins_soup.find('div', class_='col-lg-3 col-md-4 col-sm-5 col-xs-12 item-solo')
                 try:
@@ -45,27 +45,32 @@ def find_sale_weapon():
                 except:
                     continue
                 m3 = m2.find('h5')
-                bitskins_seller_price = m3.find('span', class_='item-price-display').text.replace('$', '').replace(',',
-                                                                                                                   '')
-                if float(price_weapon) / float(bitskins_seller_price) > 1.1 and float(price_weapon) > 0.3:
+                bitskins_seller_price = m3.find('span', class_='item-price-display').text.replace('$', '').replace(',','')
+                # print(name_weapon, price_weapon,bitskins_seller_price)
+                if float(price_weapon) / float(bitskins_seller_price) > 1.05 and float(price_weapon) > 0.3:
                     try:
                         service = Service("chromedriver.exe")
                         service.start()
                         option = webdriver.ChromeOptions()
                         option.add_argument('headless')
                         driver = webdriver.Remote(service.service_url, options=option)
-                        driver.get(f'{result_weapon["href"]}')
+                        steam_weapon_link = f'{result_weapon["href"]}'
+                        driver.get(steam_weapon_link)
                         time.sleep(2)
                         gun_soup = BeautifulSoup(driver.page_source, 'lxml')
                         price_block = gun_soup.find_all('span', class_='market_commodity_orders_header_promote')
                         real_price = price_block[1].text
                         real_price = float(real_price.replace('$', ''))
                         driver.close()
-                        if real_price / float(bitskins_seller_price) > 1.2 and float(price_weapon) > 0.3:
-                            sale = (real_price - float(bitskins_seller_price)) / float(bitskins_seller_price)
-                            print('Sale ' , weapon, name_weapon, str(sale) + '%')
+                        if real_price / float(bitskins_seller_price) > 1.1 and float(price_weapon) > 0.3:
+                            discount = (real_price - float(bitskins_seller_price)) / float(bitskins_seller_price)
+                            print('//////////////////////////////////////////')
+                            print('Discount' , weapon, name_weapon, real_price, bitskins_seller_price, str(discount * 100) + '%')
+                            print(bitskins_link)
+                            print(steam_weapon_link)
+                            print('///////////////////////////////////////////')
                     except:
-                        'Error'
+                        print('Error')
                         continue
 
 
